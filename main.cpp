@@ -1,11 +1,13 @@
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <optional>
 #include <queue>
+#include <random>
 #include <vector>
 
 // to avoid using int constants as states
@@ -17,6 +19,7 @@ struct Edge {
     int u, v;
     double p;
     State state = State::Unknown;
+    uint32_t monteCarloState;
 };
 
 // helper structure for candidate heap
@@ -232,8 +235,29 @@ double aggressiveStochasticEvaluator(int v) {
     return res;
 }
 
+std::mt19937 rng(67);
+
+std::vector<int> monteCarloVisited;
+void monteCarloDFS(int v, double& res, uint32_t bitmask) {
+    monteCarloVisited[v] = 1;
+    res += reward[v];
+    for (int idx : adj[v]) {
+        int u = other(idx, v);
+        if ((edges[idx].monteCarloState & bitmask) && !visited[u] && !monteCarloVisited[u]) {
+            monteCarloDFS(u, res, bitmask);
+        }
+    }
+    monteCarloVisited[v] = 0;
+}
+
 constexpr int monteCarloScenarios = 32;
-double monteCarloEvaluator(int v) { double res = 0.0; }
+double monteCarloEvaluator(int v) {
+    double res = 0.0;
+    for (int i = 0; i < monteCarloScenarios; ++i) {
+        monteCarloDFS(v, res, 1U << i);
+    }
+    return res / monteCarloScenarios - clearCost;
+}
 
 int main(int argc, char** argv) {
     Evaluator evaluate;
@@ -256,6 +280,7 @@ int main(int argc, char** argv) {
     edges.resize(m);
     adj.resize(n);
     visited.resize(n, 0);
+    monteCarloVisited.resize(n, 0);
     parent.resize(n, -1);
     parentEdgeId.resize(n);
     reward.resize(n);
@@ -268,6 +293,15 @@ int main(int argc, char** argv) {
         adj[edges[i].u].push_back(i);
         adj[edges[i].v].push_back(i);
         idToIdx[edges[i].id] = i;
+    }
+    for (Edge& e : edges) {
+        std::bernoulli_distribution dist(e.p);
+
+        for (int i = 0; i < 32; ++i) {
+            if (dist(rng)) {
+                e.monteCarloState |= (uint32_t{1} << i);
+            }
+        }
     }
     solve(evaluate);
 }
