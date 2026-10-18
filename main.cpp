@@ -118,7 +118,7 @@ void goTo(int target) {
 // find all accessible vertices that haven't been visited yet and put edges into pq
 void DFS(int v, const Evaluator& evaluate) {
     visited[v] = true;
-    if (parent[v] != -1 && adj[v].size() > 1) {
+    if (parent[v] == -1 || adj[v].size() > 1) {
         look();
     }
 
