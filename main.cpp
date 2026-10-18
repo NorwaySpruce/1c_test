@@ -302,7 +302,7 @@ int main(int argc, char** argv) {
 
         for (int i = 0; i < 32; ++i) {
             if (dist(rng)) {
-                e.monteCarloState |= (uint32_t{1} << i);
+                e.monteCarloState |= (1U << i);
             }
         }
     }
