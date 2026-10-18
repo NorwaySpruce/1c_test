@@ -232,16 +232,21 @@ double aggressiveStochasticEvaluator(int v) {
     return res;
 }
 
+constexpr int monteCarloScenarios = 32;
+double monteCarloEvaluator(int v) { double res = 0.0; }
+
 int main(int argc, char** argv) {
     Evaluator evaluate;
-    if (argc == 1 || std::strcmp(argv[1], "d") == 0) {
-        evaluate = simpleDeterministicEvaluator;
-    } else if (std::strcmp(argv[1], "s") == 0) {
+    if (argc == 1 || std::strcmp(argv[1], "s") == 0) {
         evaluate = simpleStochasticEvaluator;
+    } else if (std::strcmp(argv[1], "d") == 0) {
+        evaluate = simpleDeterministicEvaluator;
     } else if (std::strcmp(argv[1], "as") == 0) {
         evaluate = aggressiveStochasticEvaluator;
     } else if (std::strcmp(argv[1], "ra") == 0) {
         evaluate = repairAwareStochasticEvaluator;
+    } else if (std::strcmp(argv[1], "mc") == 0) {
+        evaluate = monteCarloEvaluator;
     } else {
         std::cout << "Unknown evaluator requested" << std::endl;
         return 0;
