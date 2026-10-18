@@ -118,7 +118,9 @@ void goTo(int target) {
 // find all accessible vertices that haven't been visited yet and put edges into pq
 void DFS(int v, const Evaluator& evaluate) {
     visited[v] = true;
-    look();
+    if (parent[v] != -1 && adj[v].size() > 1) {
+        look();
+    }
 
     for (auto idx : adj[v]) {
         int u = other(idx, v);
@@ -154,6 +156,8 @@ std::optional<Candidate> findBestCandidate(const Evaluator& evaluate) {
             c.score = updated;
             pq.push(c);
             continue;
+            // the accessible graph and the evaluation could have changed since
+            // we put the candidate into the heap, so we have to recalculate the value.
         }
 
         if (c.score <= 0) {
