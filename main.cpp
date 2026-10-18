@@ -208,12 +208,40 @@ double simpleStochasticEvaluator(int v) {
     return res;
 }
 
+double repairAwareStochasticEvaluator(int v) {
+    double res = reward[v] - clearCost;
+    for (int u : adj[v]) {
+        const Edge& e = edges[u];
+        if (!visited[e.v + e.u - v]) {
+            res += e.p * reward[e.v + e.u - v] +
+                   (1.0 - e.p) * std::max(0.0, reward[e.v + e.u - v] - clearCost);
+        }
+    }
+    return res;
+}
+
+constexpr double aggressionCoefficient = 1.1;
+double aggressiveStochasticEvaluator(int v) {
+    double res = reward[v] - clearCost;
+    for (int u : adj[v]) {
+        const Edge& e = edges[u];
+        if (!visited[e.v + e.u - v]) {
+            res += aggressionCoefficient * e.p * reward[e.v + e.u - v];
+        }
+    }
+    return res;
+}
+
 int main(int argc, char** argv) {
     Evaluator evaluate;
     if (argc == 1 || std::strcmp(argv[1], "d") == 0) {
         evaluate = simpleDeterministicEvaluator;
     } else if (std::strcmp(argv[1], "s") == 0) {
         evaluate = simpleStochasticEvaluator;
+    } else if (std::strcmp(argv[1], "as") == 0) {
+        evaluate = aggressiveStochasticEvaluator;
+    } else if (std::strcmp(argv[1], "ra") == 0) {
+        evaluate = repairAwareStochasticEvaluator;
     } else {
         std::cout << "Unknown evaluator requested" << std::endl;
         return 0;
