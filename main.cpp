@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -19,7 +20,7 @@ struct Edge {
     int u, v;
     double p;
     State state = State::Unknown;
-    uint32_t monteCarloState;
+    uint32_t monteCarloState = 0;
 };
 
 // helper structure for candidate heap
@@ -236,24 +237,26 @@ double aggressiveStochasticEvaluator(int v) {
 }
 
 std::mt19937 rng(67);
+int simulation = 0;
 
 std::vector<int> monteCarloVisited;
 void monteCarloDFS(int v, double& res, uint32_t bitmask) {
-    monteCarloVisited[v] = 1;
+    monteCarloVisited[v] = simulation;
     res += reward[v];
     for (int idx : adj[v]) {
         int u = other(idx, v);
-        if ((edges[idx].monteCarloState & bitmask) && !visited[u] && !monteCarloVisited[u]) {
+        if ((edges[idx].monteCarloState & bitmask) && !visited[u] &&
+            monteCarloVisited[u] != simulation) {
             monteCarloDFS(u, res, bitmask);
         }
     }
-    monteCarloVisited[v] = 0;
 }
 
 constexpr int monteCarloScenarios = 32;
 double monteCarloEvaluator(int v) {
     double res = 0.0;
     for (int i = 0; i < monteCarloScenarios; ++i) {
+        ++simulation;
         monteCarloDFS(v, res, 1U << i);
     }
     return res / monteCarloScenarios - clearCost;
